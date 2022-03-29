@@ -13,17 +13,18 @@ contact.get('/:book_id', async (req, res) => {
 contact.post('/:book_id', async (req, res) => {
     const { error } = validateContact(req.body);
     if (error) return res.status(400).send({ message: error.message });
-
     const { book_id } = req.params;
-    const { name } = req.body;
-    const contact = await Contact.find({ name, book: mongoose.Types.ObjectId(book_id) });
+    const { name, phone } = req.body;
+    let contact = await Contact.findOne({ phone: phone });
+    if (contact) {
+        return res.status(400).send({ message: 'phone number has already existed' });
+    }
+    contact = await Contact.find({ name, book: mongoose.Types.ObjectId(book_id) });
     if (contact.length !== 0) {
         return res.status(400).send({ message: 'contact has already exist in this book' });
     }
-
     const createdContact = new Contact({ ...req.body, book: mongoose.Types.ObjectId(book_id) });
     await createdContact.save();
-
     res.send(createdContact);
 });
 
